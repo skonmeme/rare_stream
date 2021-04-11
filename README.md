@@ -18,7 +18,13 @@ Flink time window (eg. Tumbling, Sliding, and Session window) is initiated only 
     * Disadvantage
         * Flink job itself controls processing on restarting
 
-In this example code, try second solution.
+3. WatermarkStrategy with idle timeout
+    * Advantage
+       * Problem is solved systematically
+    * Disadvantage
+       * Apach Flink >= 1.12
+
+In this example code, try second and third solution.
 
 ---
 
