@@ -9,14 +9,14 @@ import java.util.Properties
 import java.util.regex.Pattern
 
 case class RuntimeConfig(bootstrapServer: String = "localhost:9092",
-                         consumerTopics: Seq[String] = null,
+                         consumerTopics: Seq[String] = Seq("test-in"),
                          consumerTopicPattern: Pattern = null,
                          consumerProperties: Properties = new Properties(),
-                         groupId: String = "apm-dev",
+                         groupId: String = "test",
                          brokerList: String = "localhost:9092",
-                         producerTopics: Seq[String] = null,
+                         producerTopics: Seq[String] = Seq("test-out"),
                          producerProperties: Properties = new Properties(),
-                         sematic: FlinkKafkaProducer.Semantic = FlinkKafkaProducer.Semantic.EXACTLY_ONCE,
+                         sematic: FlinkKafkaProducer.Semantic = FlinkKafkaProducer.Semantic.AT_LEAST_ONCE,
                          parallelism: Int = 1,
                          sourceParallelism: Int = 1,
                          sinkParallelism: Int = 1,

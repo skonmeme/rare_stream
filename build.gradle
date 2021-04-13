@@ -8,7 +8,7 @@ plugins {
 // artifact properties
 group = 'com.skonuniverse.flink'
 version = '0.1'
-mainClassName = 'com.skonuniverse.flink.RareStream'
+mainClassName = 'com.skonuniverse.flink.RareStreamWithIdealTimeout'
 description = """Rapid window processing of rare messages on Apache Flink"""
 
 ext {
@@ -58,7 +58,8 @@ dependencies {
     // Compile-time dependencies that should NOT be part of the
     // shadow jar and are provided in the lib folder of Flink
     // --------------------------------------------------------------
-    implementation "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+    implementation group: "org.apache.flink", name: "flink-streaming-scala_${scalaBinaryVersion}", version: "${flinkVersion}"
+    implementation group: "org.apache.flink", name: "flink-clients_${scalaBinaryVersion}", version: "${flinkVersion}"
     implementation group: "org.apache.flink", name: "flink-connector-kafka_${scalaBinaryVersion}", version: "${flinkVersion}"
     implementation group: "org.apache.flink", name: "flink-statebackend-rocksdb_${scalaBinaryVersion}", version: "${flinkVersion}"
 

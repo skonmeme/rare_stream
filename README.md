@@ -22,7 +22,7 @@ Flink time window (eg. Tumbling, Sliding, and Session window) is initiated only 
     * Advantage
        * Problem is solved systematically
     * Disadvantage
-       * Apach Flink >= 1.12
+       * Apach Flink >= 1.11
 
 In this example code, try second and third solution.
 
