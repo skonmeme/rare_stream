@@ -2,6 +2,7 @@ package com.skonuniverse.flink
 
 import com.skonuniverse.flink.conifiguration.{FlinkConfig, KafkaConfig, ProducerConfig, RuntimeConfig}
 import com.skonuniverse.flink.datatype.RareMessage
+import com.skonuniverse.flink.source.RareMessageSource
 import com.skonuniverse.flink.specification.Flink
 import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.streaming.api.scala._
@@ -23,37 +24,45 @@ object RareStreamWithIdealTimeout {
   def main(args: Array[String]): Unit = {
     val config = RuntimeConfig.getConfig(args)
     val flinkConfig = FlinkConfig.getConfig(config)
-    val consumerConfig = KafkaConfig.getConsumerConfig(config)
+    //val consumerConfig = KafkaConfig.getConsumerConfig(config)
     val producerConfig = KafkaConfig.getProducerConfig(config)
 
-    val eventProcessingInterval = 30 * 1000L
+    val eventProcessingInterval = 10 * 1000L
 
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     Flink.setEnvironment(env, flinkConfig)
 
-    val mainStream = env
-        .addSource(consumerConfig.getConsumer)
+    val rareMessageStream = env
+        //.addSource(consumerConfig.getConsumer)
+        //.name("kafka-consumers")
+        //.uid("kafka-consumers-id")
+        //.map(sr => sr._2)
+        //.name("process-per-topic")
+        //.uid("process-per-topic-id")
+        .addSource(new RareMessageSource)
         .setParallelism(config.sourceParallelism)
-        .name("kafka-consumers")
-        .uid("kafka-consumers-id")
-        .map(sr => sr._2)
-        .name("process-per-topic")
-        .uid("process-per-topic-id")
+        .name("rare-messages-source")
+        .uid("rare-messages-source-id")
+
+    val idleTimeoutStream = rareMessageStream
         .assignTimestampsAndWatermarks(
           WatermarkStrategy
               .forBoundedOutOfOrderness[RareMessage](Duration.ofMillis(config.allowedLateness))
               .withTimestampAssigner(new SerializableTimestampAssigner[RareMessage] {
                 override def extractTimestamp(element: RareMessage, recordTimestamp: Long): Long = element.eventTime.getTime
               })
-              .withIdleness(Duration.ofMillis(config.fakeMessageInterval))
+              .withIdleness(Duration.ofMillis(config.streamIdleTimeout))
         )
+
+    val mainStream = idleTimeoutStream
         .keyBy(_.key)
         .window(TumblingEventTimeWindows.of(Time.milliseconds(eventProcessingInterval)))
         .maxBy("value")
         .name("main-process")
         .uid("main-prcoess-id")
 
-    sink(mainStream, producerConfig)
+    mainStream.print
+    //sink(mainStream, producerConfig)
 
     env.execute("Rapid window processing of rare messages on Apache Flink")
   }

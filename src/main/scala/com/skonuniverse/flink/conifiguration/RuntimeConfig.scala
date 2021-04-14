@@ -13,6 +13,8 @@ case class RuntimeConfig(bootstrapServer: String = "localhost:9092",
                          consumerTopicPattern: Pattern = null,
                          consumerProperties: Properties = new Properties(),
                          groupId: String = "test",
+                         consumingOffset: String = "latest",
+                         partitionDiscoveryInterval: Long = 60 * 1000L,
                          brokerList: String = "localhost:9092",
                          producerTopics: Seq[String] = Seq("test-out"),
                          producerProperties: Properties = new Properties(),
@@ -33,7 +35,7 @@ case class RuntimeConfig(bootstrapServer: String = "localhost:9092",
                          unalignedCheckpoints: Boolean = true,
                          alignmentTimeout: Long = 180 * 1000L,
                          stateBackend: Properties = new Properties(),
-                         fakeMessageInterval: Long = 60 * 1000L)
+                         streamIdleTimeout: Long = 30 * 1000L)
 
 object RuntimeConfig {
   def getConfig(args: Array[String]): RuntimeConfig = {
@@ -59,6 +61,14 @@ object RuntimeConfig {
             }),
         opt[String]("group-id")
             .action((value, config) => config.copy(groupId = value)),
+        opt[String]("consuming-offset")
+            .action((value, config) => config.copy(consumingOffset = value)),
+        opt[Long]("partition-discovery-interval")
+            .validate(value => {
+              if (value > 0) success
+              else failure("Value <partition-discovery-interval> should be greater than 0")
+            })
+          .action((value, config) => config.copy(partitionDiscoveryInterval = value)),
         opt[String]("broker-list")
             .action((value, config) => config.copy(brokerList = value)),
         opt[Seq[String]]("producer-topics")
@@ -173,7 +183,7 @@ object RuntimeConfig {
               if (value >= 0) success
               else failure("Value <fake-message-interval> should be greater or equal than 0")
             })
-            .action((value, config) => config.copy(fakeMessageInterval = value))
+            .action((value, config) => config.copy(streamIdleTimeout = value))
       )
     }
 

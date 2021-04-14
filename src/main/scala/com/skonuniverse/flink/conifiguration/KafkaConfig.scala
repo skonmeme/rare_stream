@@ -2,6 +2,7 @@ package com.skonuniverse.flink.conifiguration
 
 import com.skonuniverse.flink.datatype.RareMessage
 import com.skonuniverse.flink.serialization.{RareMessageKafkaDeserializationSchema, RareMessageKafkaSerializationSchema}
+import com.skonuniverse.flink.specification.Kafka
 import org.apache.flink.streaming.connectors.kafka.{FlinkKafkaConsumer, FlinkKafkaProducer}
 import org.apache.kafka.common.errors.IllegalGenerationException
 
@@ -18,15 +19,21 @@ sealed trait KafkaConfig {
 case class ConsumerConfig(bootstrapServer: String,
                           topics: Either[Seq[String], Pattern],
                           properties: Properties,
-                          groupId: String) extends KafkaConfig {
+                          groupId: String,
+                          consumingOffset: String = "latest",
+                          partitionDiscoveryInterval: Long = 60 * 1000L) extends KafkaConfig {
   def getConsumer: FlinkKafkaConsumer[(String, RareMessage)] = {
     val fullProperties = new Properties(properties)
     fullProperties.put("bootstrap.servers", bootstrapServer)
     fullProperties.put("group.id", groupId)
-    topics match {
+    val consumer = topics match {
       case Left(t) => new FlinkKafkaConsumer(t.asJava, new RareMessageKafkaDeserializationSchema, fullProperties)
-      case Right(p) => new FlinkKafkaConsumer(p, new RareMessageKafkaDeserializationSchema, fullProperties)
+      case Right(p) => {
+        fullProperties.put("flink.partition-discovery.interval-millis", partitionDiscoveryInterval.toString)
+        new FlinkKafkaConsumer(p, new RareMessageKafkaDeserializationSchema, fullProperties)
+      }
     }
+    Kafka.consumerWithOffset(consumer, consumingOffset)
   }
 }
 
@@ -54,7 +61,9 @@ object KafkaConfig {
       bootstrapServer = config.bootstrapServer,
       topics = if (config.consumerTopics != null) Left(config.consumerTopics) else Right(config.consumerTopicPattern),
       properties = config.consumerProperties,
-      groupId = config.groupId
+      groupId = config.groupId,
+      consumingOffset = config.consumingOffset,
+      partitionDiscoveryInterval = config.partitionDiscoveryInterval
     )
   }
 

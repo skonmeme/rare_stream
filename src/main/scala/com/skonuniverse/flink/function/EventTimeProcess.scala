@@ -1,13 +1,18 @@
 package com.skonuniverse.flink.function
 
+import com.skonuniverse.flink.conifiguration.RuntimeConfig
 import com.skonuniverse.flink.datatype.{FakeMessage, RareMessage}
+import com.skonuniverse.flink.source.FakeMessages
+import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.flink.streaming.api.functions.co.KeyedCoProcessFunction
+import org.apache.flink.streaming.api.scala._
 import org.apache.flink.util.Collector
 
 import java.sql.Timestamp
+import java.time.Duration
 import scala.reflect.classTag
 
 
@@ -58,5 +63,42 @@ class EventTimeProcess(fakeMessageInterval: Long) extends KeyedCoProcessFunction
     val fakeMessage = RareMessage(eventTime = new Timestamp(newFakeTimestamp))
 
     out.collect((false, fakeMessage))
+  }
+}
+
+object EventTimeProcess {
+  class Partitions(paralellism: Int) extends Serializable {
+    var partition = 0
+
+    def next: Int = {
+      partition = (partition + 1) % paralellism
+      partition
+    }
+  }
+
+  def getStream(rareMessageStream: DataStream[RareMessage], env: StreamExecutionEnvironment, config: RuntimeConfig): DataStream[(Boolean, RareMessage)] = {
+    val parition = new Partitions(config.sourceParallelism)
+    val fakeMessageStream = FakeMessages.getStream(env, config)
+
+    rareMessageStream
+        .map(sr => {
+          //(parition.next, sr._2)
+          (parition.next, sr)
+        })
+        .keyBy(_._1)
+        .connect(fakeMessageStream)
+        .process(new EventTimeProcess(config.streamIdleTimeout))
+        .setParallelism(config.sourceParallelism)
+        .assignTimestampsAndWatermarks(
+          WatermarkStrategy
+              .forBoundedOutOfOrderness[(Boolean, RareMessage)](Duration.ofMillis(config.allowedLateness))
+              .withTimestampAssigner(new SerializableTimestampAssigner[(Boolean, RareMessage)] {
+                override def extractTimestamp(element: (Boolean, RareMessage), recordTimestamp: Long): Long =
+                  element._2.eventTime.getTime
+              })
+        )
+        .setParallelism(config.sourceParallelism)
+        .name("watermark-generation")
+        .uid("watermark-generation-id")
   }
 }

@@ -7,7 +7,7 @@ import java.sql.Timestamp
 import scala.util.Random
 
 class RareMessageSource extends SourceFunction[RareMessage] {
-  private val interval = 30 * 1000L
+  private val interval = 120 * 1000L
 
   override def run(ctx: SourceFunction.SourceContext[RareMessage]): Unit = {
     val random = Random
