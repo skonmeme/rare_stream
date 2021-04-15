@@ -1,7 +1,15 @@
 # Rapid window processing of rare messages on Apache Flink
 
-Watermark of Apache Flink should be updated when new message is processed. If the message is rarely arrived, The watermark will be kept in same timestamp for a long time.
+Watermark of Apache Flink is updated when new message is processed. If the message is rarely arrived, the watermark will be kept in same timestamp for a long time.
 Flink time window (eg. Tumbling, Sliding, and Session window) is initiated only when the timestamp of the watermark is greater than window end timestamp, therefore, the window processing could extreamly be delayed for rarely arriving messages.
+
+However, it is considerable for special case like below condition:
+* WindowFunction is required
+* Given bounded time, the system should respond to arrived messages
+* Health checking is given for source systems
+
+Indeed, predicting next event-time is prohibitted on event-time based system, because event-time means the system time could be different to the real time. 
+Therefore, this example should not be recommended for general purpose.
 
 ## Solutions
 
@@ -18,13 +26,7 @@ Flink time window (eg. Tumbling, Sliding, and Session window) is initiated only 
     * Disadvantage
         * Flink job itself controls processing on restarting
 
-3. WatermarkStrategy with idle timeout
-    * Advantage
-       * Problem is solved systematically
-    * Disadvantage
-       * Apach Flink >= 1.11
-
-In this example code, try second and third solution.
+In this example code, try second solution.
 
 ---
 

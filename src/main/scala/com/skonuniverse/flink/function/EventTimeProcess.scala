@@ -15,7 +15,6 @@ import java.sql.Timestamp
 import java.time.Duration
 import scala.reflect.classTag
 
-
 /**
  * Output: (! fakeness, message)
  */
@@ -26,6 +25,7 @@ class EventTimeProcess(fakeMessageInterval: Long) extends KeyedCoProcessFunction
       TypeExtractor.getForClass(classTag[(Long, Long, Long)].runtimeClass).asInstanceOf[TypeInformation[(Long, Long, Long)]]
     )
   )
+  lazy val index: Int = getRuntimeContext.getIndexOfThisSubtask + 1
 
   //def newFakeMessage(args: AnyRef*): T = classTag[T].runtimeClass
   //    .getConstructors.head
@@ -60,31 +60,20 @@ class EventTimeProcess(fakeMessageInterval: Long) extends KeyedCoProcessFunction
     //  Timestamp.from(timestamp._1.toInstant.plusMillis(timeGap)).asInstanceOf[Object],
     //  false.asInstanceOf[Object]
     //)
-    val fakeMessage = RareMessage(eventTime = new Timestamp(newFakeTimestamp))
+
+    val fakeMessage = RareMessage(eventTime = new Timestamp(newFakeTimestamp), key = -index)
 
     out.collect((false, fakeMessage))
   }
 }
 
 object EventTimeProcess {
-  class Partitions(paralellism: Int) extends Serializable {
-    var partition = 0
-
-    def next: Int = {
-      partition = (partition + 1) % paralellism
-      partition
-    }
-  }
-
   def getStream(rareMessageStream: DataStream[RareMessage], env: StreamExecutionEnvironment, config: RuntimeConfig): DataStream[(Boolean, RareMessage)] = {
-    val parition = new Partitions(config.sourceParallelism)
     val fakeMessageStream = FakeMessages.getStream(env, config)
 
     rareMessageStream
-        .map(sr => {
-          //(parition.next, sr._2)
-          (parition.next, sr)
-        })
+        .process(new PartitionAllocation)
+        .setParallelism(config.sourceParallelism)
         .keyBy(_._1)
         .connect(fakeMessageStream)
         .process(new EventTimeProcess(config.streamIdleTimeout))

@@ -1,12 +1,12 @@
 package com.skonuniverse.flink.source
 
 import com.skonuniverse.flink.datatype.RareMessage
-import org.apache.flink.streaming.api.functions.source.SourceFunction
+import org.apache.flink.streaming.api.functions.source.{ParallelSourceFunction, SourceFunction}
 
 import java.sql.Timestamp
 import scala.util.Random
 
-class RareMessageSource extends SourceFunction[RareMessage] {
+class RareMessageSource extends ParallelSourceFunction[RareMessage] {
   private val interval = 120 * 1000L
 
   override def run(ctx: SourceFunction.SourceContext[RareMessage]): Unit = {
