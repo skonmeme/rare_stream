@@ -55,19 +55,17 @@ object RareStreamWithFakeMessage {
     val eventTimeProcessedStream = EventTimeProcess.getStream(rareMessageStream, env, config)
 
     val mainStream = eventTimeProcessedStream
-        .keyBy(_._2.key)
+        .keyBy(_.key)
         .window(TumblingEventTimeWindows.of(Time.milliseconds(eventProcessingInterval)))
         .reduce((v1, v2) => {
-          if (v1._2.value < v2._2.value) v2
+          if (v1.value < v2.value) v2
           else v1
         })
-        .filter(r => r._1)
-        .map(r => r._2)
         .name("main-process")
         .uid("main-prcoess-id")
 
-    //mainStream.print()
-    sink(mainStream, producerConfig)
+    mainStream.print()
+    //sink(mainStream, producerConfig)
 
     env.execute("Rapid window processing of rare messages on Apache Flink")
   }
