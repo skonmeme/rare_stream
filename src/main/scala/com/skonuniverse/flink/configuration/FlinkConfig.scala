@@ -1,4 +1,4 @@
-package com.skonuniverse.flink.conifiguration
+package com.skonuniverse.flink.configuration
 
 import org.apache.flink.api.common.restartstrategy.RestartStrategies
 import org.apache.flink.api.common.restartstrategy.RestartStrategies.RestartStrategyConfiguration

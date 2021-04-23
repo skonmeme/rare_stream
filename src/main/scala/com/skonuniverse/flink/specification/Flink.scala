@@ -1,6 +1,6 @@
 package com.skonuniverse.flink.specification
 
-import com.skonuniverse.flink.conifiguration.FlinkConfig
+import com.skonuniverse.flink.configuration.FlinkConfig
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 
 object Flink {

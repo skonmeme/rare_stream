@@ -1,4 +1,4 @@
-package com.skonuniverse.flink.conifiguration
+package com.skonuniverse.flink.configuration
 
 import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.environment.CheckpointConfig.ExternalizedCheckpointCleanup

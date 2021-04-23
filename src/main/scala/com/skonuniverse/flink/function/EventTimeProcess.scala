@@ -1,6 +1,6 @@
 package com.skonuniverse.flink.function
 
-import com.skonuniverse.flink.conifiguration.RuntimeConfig
+import com.skonuniverse.flink.configuration.RuntimeConfig
 import com.skonuniverse.flink.datatype.{FakeMessage, RareMessage}
 import com.skonuniverse.flink.source.FakeMessages
 import org.apache.flink.api.common.eventtime.{SerializableTimestampAssigner, WatermarkStrategy}

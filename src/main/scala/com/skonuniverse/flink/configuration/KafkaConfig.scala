@@ -1,4 +1,4 @@
-package com.skonuniverse.flink.conifiguration
+package com.skonuniverse.flink.configuration
 
 import com.skonuniverse.flink.datatype.RareMessage
 import com.skonuniverse.flink.serialization.{RareMessageKafkaDeserializationSchema, RareMessageKafkaSerializationSchema}

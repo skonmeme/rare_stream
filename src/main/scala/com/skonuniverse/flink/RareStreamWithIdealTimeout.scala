@@ -1,6 +1,6 @@
 package com.skonuniverse.flink
 
-import com.skonuniverse.flink.conifiguration.{FlinkConfig, KafkaConfig, ProducerConfig, RuntimeConfig}
+import com.skonuniverse.flink.configuration.{FlinkConfig, KafkaConfig, ProducerConfig, RuntimeConfig}
 import com.skonuniverse.flink.datatype.RareMessage
 import com.skonuniverse.flink.source.RareMessageSource
 import com.skonuniverse.flink.specification.Flink

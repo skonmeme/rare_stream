@@ -1,6 +1,6 @@
 package com.skonuniverse.flink.source
 
-import com.skonuniverse.flink.conifiguration.RuntimeConfig
+import com.skonuniverse.flink.configuration.RuntimeConfig
 import com.skonuniverse.flink.datatype.FakeMessage
 import org.apache.flink.streaming.api.functions.source.{ParallelSourceFunction, SourceFunction}
 import org.apache.flink.streaming.api.scala._
